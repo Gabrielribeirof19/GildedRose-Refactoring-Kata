@@ -5,11 +5,16 @@ namespace GildedRoseKata;
 
 public class Program
 {
+    public static IGildedRose GildedRoseInstance { get; set; }
     public static void Main(string[] args)
     {
         Console.WriteLine("OMGHAI!");
+        if (GildedRoseInstance == null)
+        {
+            GildedRoseInstance = new GildedRose(new List<Item>());
+        }
 
-        IList<Item> items = new List<Item>
+        GildedRoseInstance.Items = new List<Item>
         {
             new Item {Name = "+5 Dexterity Vest", SellIn = 10, Quality = 20},
             new Item {Name = "Aged Brie", SellIn = 2, Quality = 0},
@@ -38,7 +43,7 @@ public class Program
             new Item {Name = "Conjured Mana Cake", SellIn = 3, Quality = 6}
         };
 
-        var app = new GildedRose(items);
+        //GildedRoseInstance = new GildedRose(items);
 
         int days = 2;
         if (args.Length > 0)
@@ -50,12 +55,12 @@ public class Program
         {
             Console.WriteLine("-------- day " + i + " --------");
             Console.WriteLine("name, sellIn, quality");
-            for (var j = 0; j < items.Count; j++)
+            foreach (var item in GildedRoseInstance.Items)
             {
-                Console.WriteLine(items[j].Name + ", " + items[j].SellIn + ", " + items[j].Quality);
+                Console.WriteLine($"{item.Name}, {item.SellIn}, {item.Quality}");
             }
             Console.WriteLine("");
-            app.UpdateQuality();
+            GildedRoseInstance.UpdateQuality();
         }
     }
 }

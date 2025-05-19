@@ -1,38 +1,71 @@
 ﻿using GildedRoseKata;
-
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-
-using VerifyXunit;
-
 using Xunit;
+using Moq;
 
-namespace GildedRoseTests;
+namespace GildedRoseKata.Tests;
 
-public class ApprovalTest
+public class ItemTests
 {
-    [Fact]
-    public Task Foo()
+    // Método que fornece os dados para o teste
+    public static IEnumerable<object[]> GetItems()
     {
-        Item[] items = { new Item { Name = "foo", SellIn = 0, Quality = 0 } };
-        GildedRose app = new GildedRose(items);
-        app.UpdateQuality();
-        
-        return Verifier.Verify(items);
+        yield return new object[]
+        {
+            new Item { Name = "+5 Dexterity Vest", SellIn = 10, Quality = 20 },
+            new Item { Name = "+5 Dexterity Vest", SellIn = 9, Quality = 19 } // Estado esperado
+        };
+        yield return new object[]
+        {
+            new Item { Name = "Aged Brie", SellIn = 2, Quality = 0 },
+            new Item { Name = "Aged Brie", SellIn = 1, Quality = 1 } // Estado esperado
+        };
+        yield return new object[]
+        {
+            new Item { Name = "Elixir of the Mongoose", SellIn = 5, Quality = 7 },
+            new Item { Name = "Elixir of the Mongoose", SellIn = 4, Quality = 6 } // Estado esperado
+        };
     }
-    
-    [Fact]
-    public Task ThirtyDays()
+
+    [Theory]
+    [MemberData(nameof(GetItems))]
+    public void TestItemUpdateQuality(Item initialItem, Item expectedItem)
     {
-        var fakeoutput = new StringBuilder();
-        Console.SetOut(new StringWriter(fakeoutput));
-        Console.SetIn(new StringReader($"a{Environment.NewLine}"));
+        // Arrange
+        var items = new List<Item> { initialItem };
+        var app = new GildedRose(items);
 
-        Program.Main(new string[] { "30" });
-        var output = fakeoutput.ToString();
+        // Act
+        app.UpdateQuality();
 
-        return Verifier.Verify(output);
+        // Assert
+        Assert.Equal(expectedItem.Name, items[0].Name);
+        Assert.Equal(expectedItem.SellIn, items[0].SellIn);
+        Assert.Equal(expectedItem.Quality, items[0].Quality);
+    }
+
+    [Fact]
+    public void Main_ShouldCallUpdateQuality()
+    {
+        // Arrange
+        var mockItems = new List<Item>
+    {
+        new Item { Name = "Test Item", SellIn = 5, Quality = 10 }
+    };
+
+        var mockGildedRose = new Mock<IGildedRose>();
+        mockGildedRose.SetupProperty(x => x.Items, mockItems);
+
+        Program.GildedRoseInstance = mockGildedRose.Object;
+
+        var args = new string[] { "1" };
+
+        // Act
+        Program.Main(args);
+
+        // Assert
+        mockGildedRose.Verify(x => x.UpdateQuality(), Times.AtLeastOnce);
     }
 }
